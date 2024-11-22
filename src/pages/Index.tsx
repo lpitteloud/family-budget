@@ -5,10 +5,13 @@ import { CategoryCard } from "@/components/Dashboard/CategoryCard";
 import { AddCategoryForm } from "@/components/Dashboard/AddCategoryForm";
 import { mockCategories, mockOverview } from "@/lib/mockData";
 import { Category } from "@/lib/types";
+import { useAuth } from "@/components/Auth/AuthProvider";
+import { Button } from "@/components/ui/button";
 
 const Index = () => {
   const [categories, setCategories] = useState<Category[]>(mockCategories);
   const [overview, setOverview] = useState(mockOverview);
+  const { user, signIn, signOut } = useAuth();
 
   const handleAddCategory = (name: string, budget: number) => {
     const newCategory: Category = {
@@ -17,7 +20,7 @@ const Index = () => {
       budget,
       spent: 0,
       color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
-      user_id: "mock-user-id",
+      user_id: user?.id || "mock-user-id",
       created_at: new Date().toISOString()
     };
     
@@ -29,9 +32,23 @@ const Index = () => {
     });
   };
 
+  if (!user) {
+    return (
+      <div className="container mx-auto p-4 flex flex-col items-center justify-center min-h-screen">
+        <h1 className="text-3xl font-bold mb-8">Mon Budget</h1>
+        <Button onClick={signIn}>Se connecter avec Google</Button>
+      </div>
+    );
+  }
+
   return (
     <div className="container mx-auto p-4 space-y-8">
-      <h1 className="text-3xl font-bold">Mon Budget</h1>
+      <div className="flex justify-between items-center">
+        <h1 className="text-3xl font-bold">Mon Budget</h1>
+        <Button variant="outline" onClick={signOut}>
+          Se déconnecter
+        </Button>
+      </div>
       
       <Overview data={overview} />
       
