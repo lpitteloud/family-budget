@@ -21,8 +21,7 @@ export const CategoryCard = ({ category }: CategoryCardProps) => {
       
       <Progress 
         value={percentage} 
-        className="h-2"
-        indicatorClassName={isOverBudget ? "bg-red-500" : "bg-green-500"}
+        className={`h-2 ${isOverBudget ? "bg-red-500" : "bg-green-500"}`}
       />
       
       <div className="flex justify-between text-sm text-gray-600">
