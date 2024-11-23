@@ -8,7 +8,7 @@ import { CSVImport } from "@/components/Dashboard/CSVImport";
 import { Category } from "@/lib/types";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { Button } from "@/components/ui/button";
-import { getCategories } from "@/lib/api";
+import { getCategories, createCategory } from "@/lib/api";
 import { useQuery } from "@tanstack/react-query";
 
 const Index = () => {
