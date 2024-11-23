@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import Papa from "papaparse";
-import { createCategory, bulkCreateExpenses } from "@/lib/api";
+import { bulkCreateExpenses } from "@/lib/api";
 
 interface CSVRow {
   "Date de l'opération": string;
@@ -33,7 +33,7 @@ export const CSVImport = () => {
     
     Papa.parse(file, {
       header: true,
-      delimiter: ";", // Spécifie le point-virgule comme délimiteur
+      delimiter: ";",
       encoding: "UTF-8",
       complete: async (results) => {
         try {
@@ -43,29 +43,14 @@ export const CSVImport = () => {
             throw new Error("Le fichier est vide");
           }
           
-          // Extraire les catégories uniques
-          const uniqueCategories = [...new Set(data.map(row => row["Catégorie"]))];
-          
-          // Créer les catégories
-          for (const categoryName of uniqueCategories) {
-            if (categoryName && categoryName.trim()) {
-              try {
-                await createCategory(categoryName.trim(), 0); // Budget initial à 0
-              } catch (error) {
-                // Ignore les erreurs si la catégorie existe déjà
-                console.log(`Catégorie ${categoryName} déjà existante ou erreur création`);
-              }
-            }
-          }
-          
-          // Préparer les dépenses
+          // Préparer les dépenses sans catégorie
           const expenses = data
             .filter(row => row["Montant"] && row["Date de l'opération"])
             .map(row => ({
               date: row["Date de l'opération"],
               amount: Math.abs(parseFloat(row["Montant"].replace(",", "."))),
               description: row["Détail 1"] || "",
-              category: row["Catégorie"].trim()
+              category: undefined // Enlève la catégorie
             }));
           
           if (expenses.length === 0) {
@@ -86,7 +71,6 @@ export const CSVImport = () => {
           });
         } finally {
           setIsLoading(false);
-          // Réinitialiser l'input file
           event.target.value = '';
         }
       },
