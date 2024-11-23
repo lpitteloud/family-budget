@@ -33,49 +33,67 @@ export const CSVImport = () => {
     
     Papa.parse(file, {
       header: true,
+      delimiter: ";", // Spécifie le point-virgule comme délimiteur
       encoding: "UTF-8",
       complete: async (results) => {
         try {
           const data = results.data as CSVRow[];
+          
+          if (data.length === 0) {
+            throw new Error("Le fichier est vide");
+          }
           
           // Extraire les catégories uniques
           const uniqueCategories = [...new Set(data.map(row => row["Catégorie"]))];
           
           // Créer les catégories
           for (const categoryName of uniqueCategories) {
-            if (categoryName) {
-              await createCategory(categoryName, 0); // Budget initial à 0
+            if (categoryName && categoryName.trim()) {
+              try {
+                await createCategory(categoryName.trim(), 0); // Budget initial à 0
+              } catch (error) {
+                // Ignore les erreurs si la catégorie existe déjà
+                console.log(`Catégorie ${categoryName} déjà existante ou erreur création`);
+              }
             }
           }
           
           // Préparer les dépenses
-          const expenses = data.map(row => ({
-            date: row["Date de l'opération"],
-            amount: Math.abs(parseFloat(row["Montant"].replace(",", "."))),
-            description: row["Détail 1"],
-            category: row["Catégorie"]
-          }));
+          const expenses = data
+            .filter(row => row["Montant"] && row["Date de l'opération"])
+            .map(row => ({
+              date: row["Date de l'opération"],
+              amount: Math.abs(parseFloat(row["Montant"].replace(",", "."))),
+              description: row["Détail 1"] || "",
+              category: row["Catégorie"].trim()
+            }));
           
+          if (expenses.length === 0) {
+            throw new Error("Aucune dépense valide trouvée dans le fichier");
+          }
+
           await bulkCreateExpenses(expenses);
           
           toast({
             title: "Import réussi",
-            description: `${expenses.length} dépenses ont été importées.`,
+            description: `${expenses.length} dépenses ont été importées avec succès.`,
           });
         } catch (error) {
           toast({
             title: "Erreur lors de l'import",
-            description: "Une erreur est survenue lors de l'import du fichier.",
+            description: error instanceof Error ? error.message : "Une erreur est survenue lors de l'import du fichier.",
             variant: "destructive",
           });
         } finally {
           setIsLoading(false);
+          // Réinitialiser l'input file
+          event.target.value = '';
         }
       },
-      error: () => {
+      error: (error) => {
         toast({
           title: "Erreur de lecture",
-          description: "Le fichier n'a pas pu être lu correctement.",
+          description: "Le fichier n'a pas pu être lu correctement. Vérifiez le format du fichier.",
           variant: "destructive",
         });
         setIsLoading(false);
