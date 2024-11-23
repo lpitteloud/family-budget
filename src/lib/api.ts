@@ -59,7 +59,7 @@ export const bulkCreateExpenses = async (expenses: CSVExpense[]) => {
       amount: exp.amount,
       description: exp.description,
       date: exp.date,
-      category: exp.category
+      category_id: exp.category_id
     })))
     .select();
     

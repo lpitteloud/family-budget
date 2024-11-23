@@ -50,7 +50,7 @@ export const CSVImport = () => {
               date: row["Date de l'opération"],
               amount: Math.abs(parseFloat(row["Montant"].replace(",", "."))),
               description: row["Détail 1"] || "",
-              category: undefined // Enlève la catégorie
+              category_id: undefined // Utilise category_id au lieu de category
             }));
           
           if (expenses.length === 0) {
