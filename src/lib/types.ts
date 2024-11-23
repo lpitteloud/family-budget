@@ -19,13 +19,14 @@ export interface Expense {
   amount: number;
   description?: string;
   date: string;
-  category_id?: string;
+  category?: string;
   user_id: string;
   created_at: string;
 }
 
 export interface CSVExpense {
+  date: string;
   amount: number;
   description?: string;
-  date: string;
+  category?: string;
 }

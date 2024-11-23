@@ -1,35 +1,30 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Overview } from "@/components/Dashboard/Overview";
 import { ExpensesPieChart } from "@/components/Dashboard/ExpensesPieChart";
 import { CategoryCard } from "@/components/Dashboard/CategoryCard";
 import { AddCategoryForm } from "@/components/Dashboard/AddCategoryForm";
-import { mockCategories, mockOverview } from "@/lib/mockData";
+import { MonthSelector } from "@/components/Dashboard/MonthSelector";
+import { CSVImport } from "@/components/Dashboard/CSVImport";
 import { Category } from "@/lib/types";
 import { useAuth } from "@/components/Auth/AuthProvider";
 import { Button } from "@/components/ui/button";
+import { getCategories } from "@/lib/api";
+import { useQuery } from "@tanstack/react-query";
 
 const Index = () => {
-  const [categories, setCategories] = useState<Category[]>(mockCategories);
-  const [overview, setOverview] = useState(mockOverview);
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const { user, signIn, signOut } = useAuth();
 
-  const handleAddCategory = (name: string, budget: number) => {
-    const newCategory: Category = {
-      id: Date.now().toString(),
-      name,
-      budget,
-      spent: 0,
-      color: `#${Math.floor(Math.random()*16777215).toString(16)}`,
-      user_id: user?.id || "mock-user-id",
-      created_at: new Date().toISOString()
-    };
-    
-    setCategories([...categories, newCategory]);
-    setOverview({
-      ...overview,
-      totalBudget: overview.totalBudget + budget,
-      remaining: overview.remaining + budget,
-    });
+  const { data: categories = [], refetch } = useQuery({
+    queryKey: ['categories', user?.id],
+    queryFn: getCategories,
+    enabled: !!user,
+  });
+
+  const overview = {
+    totalBudget: categories.reduce((sum, cat) => sum + cat.budget, 0),
+    totalSpent: categories.reduce((sum, cat) => sum + cat.spent, 0),
+    remaining: categories.reduce((sum, cat) => sum + (cat.budget - cat.spent), 0),
   };
 
   if (!user) {
@@ -50,11 +45,19 @@ const Index = () => {
         </Button>
       </div>
       
+      <div className="flex justify-between items-center">
+        <MonthSelector date={selectedDate} onDateChange={setSelectedDate} />
+        <CSVImport />
+      </div>
+      
       <Overview data={overview} />
       
       <div className="grid md:grid-cols-2 gap-8">
         <ExpensesPieChart categories={categories} />
-        <AddCategoryForm onAdd={handleAddCategory} />
+        <AddCategoryForm onAdd={async (name, budget) => {
+          await createCategory(name, budget);
+          refetch();
+        }} />
       </div>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">
