@@ -4,6 +4,7 @@ import { Input } from "@/components/ui/input";
 import { useToast } from "@/components/ui/use-toast";
 import Papa from "papaparse";
 import { bulkCreateExpenses } from "@/lib/api";
+import { parse, format } from "date-fns";
 
 interface CSVRow {
   "Date de l'opération": string;
@@ -24,6 +25,17 @@ interface CSVRow {
 export const CSVImport = () => {
   const { toast } = useToast();
   const [isLoading, setIsLoading] = useState(false);
+
+  const formatDate = (dateStr: string) => {
+    try {
+      // Parse la date au format DD/MM/YYYY
+      const parsedDate = parse(dateStr, 'dd/MM/yyyy', new Date());
+      // Convertit en format ISO YYYY-MM-DD
+      return format(parsedDate, 'yyyy-MM-dd');
+    } catch (error) {
+      throw new Error(`Format de date invalide: ${dateStr}`);
+    }
+  };
 
   const handleFileUpload = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const file = event.target.files?.[0];
@@ -47,7 +59,7 @@ export const CSVImport = () => {
           const expenses = data
             .filter(row => row["Montant"] && row["Date de l'opération"])
             .map(row => ({
-              date: row["Date de l'opération"],
+              date: formatDate(row["Date de l'opération"]),
               amount: Math.abs(parseFloat(row["Montant"].replace(",", "."))),
               description: row["Détail 1"] || "",
               category_id: undefined // Utilise category_id au lieu de category
