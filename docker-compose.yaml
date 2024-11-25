@@ -1,0 +1,30 @@
+services:
+  dev:
+    build:
+      context: .
+      dockerfile: .docker/node/Dockerfile
+    ports:
+      - "5173:5173"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    command: npm run dev -- --host
+    environment:
+      - NODE_ENV=development
+      - VITE_HOST=0.0.0.0
+      - VITE_SUPABASE_URL=${VITE_SUPABASE_URL}
+      - VITE_SUPABASE_ANON_KEY=${VITE_SUPABASE_ANON_KEY}
+
+  nginx:
+    build:
+      context: .
+      dockerfile: .docker/nginx/Dockerfile
+    ports:
+      - "8080:80"
+    depends_on:
+      - dev
+    volumes:
+      - dist:/usr/share/nginx/html
+
+volumes:
+  dist:

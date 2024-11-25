@@ -14,7 +14,7 @@ const App = () => (
       <AuthProvider>
         <Toaster />
         <Sonner />
-        <BrowserRouter>
+        <BrowserRouter basename="/family-budget">
           <Routes>
             <Route path="/" element={<Index />} />
           </Routes>

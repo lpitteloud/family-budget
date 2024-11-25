@@ -7,7 +7,7 @@ import { componentTagger } from "lovable-tagger";
 export default defineConfig(({ mode }) => ({
   server: {
     host: "::",
-    port: 8080,
+    port: process.env.NODE_ENV === 'production' ? 8080 : 80,
   },
   plugins: [
     react(),
@@ -19,4 +19,9 @@ export default defineConfig(({ mode }) => ({
     },
   },
   base: process.env.NODE_ENV === 'production' ? '/family-budget/' : '/',
+  build: {
+    sourcemap: true,
+    assetsDir: 'assets',
+    outDir: 'dist',
+  },
 }));
